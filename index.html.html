@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinel | Master the Impulse - Gamified Self-Control</title>
+    <!-- Load Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#4f46e5',   // Indigo - Core brand color
+                        'secondary': '#f97316', // Orange - Action/Highlight color
+                        'dark-bg': '#0f172a',   // Slate-900 - Dark background
+                        'dark-card': '#1e293b', // Slate-800 - Card background
+                        'text-light': '#f1f5f9', // Slate-100 - Primary text
+                        'neon-glow': '#fcd34d', // NEW: Neon Yellow/Gold for highlights (was 'accent')
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* General styling for dark mode, mobile responsiveness, and smooth scrolling */
+        html { scroll-behavior: smooth; }
+        body { 
+            background-color: #0f172a; /* dark-bg */
+            color: #f1f5f9; /* text-light */
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+        }
+        
+        /* Typography */
+        .section-title {
+            font-size: 2.25rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            color: #f1f5f9;
+        }
+        
+        /* Card Interactions & Scroll Animation Setup */
+        .feature-card {
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s ease, opacity 0.6s ease, visibility 0.6s;
+            opacity: 0; /* Hidden by default for animation */
+            transform: translateY(20px);
+            visibility: hidden;
+        }
+        .feature-card.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+            visibility: visible;
+        }
+        .feature-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4), 0 4px 6px -2px rgba(79, 70, 229, 0.1);
+        }
+
+        /* Hero text gradient effect for impact */
+        .hero-gradient {
+            background-image: linear-gradient(to right, #4f46e5, #f97316);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* ======================================= */
+        /* UI/UX FIX: NAVBAR AND BRAND LOGOTYPE */
+        /* ======================================= */
+        
+        /* 1. Logo Container: Ensures the whole element behaves as one solid block */
+        .logo-container {
+            flex-shrink: 0; 
+            display: flex;
+            align-items: center;
+        }
+
+        /* 2. Brand Name Wrapper: Allows two lines inside a flex item */
+        .brand-name-wrapper {
+            line-height: 1.0; /* Very tight line height */
+        }
+        
+        /* 3. Logo Text Styling - Sentinel */
+        .logo-text-primary {
+            font-size: 1.4rem; /* text-xl + */
+            letter-spacing: -0.02em; /* Tighten kerning */
+        }
+        /* 4. Logo Text Styling - Tagline */
+        .logo-text-secondary {
+            font-size: 0.75rem; /* text-xs on mobile */
+            font-style: italic;
+            opacity: 0.9;
+            letter-spacing: 0.05em;
+        }
+
+        /* 5. Responsive Text Size Adjustments (sm: and up) */
+        @media (min-width: 640px) {
+             .logo-text-primary {
+                font-size: 1.8rem; /* sm:text-3xl (larger than before for impact) */
+            }
+             .logo-text-secondary {
+                font-size: 0.875rem; /* sm:text-sm */
+            }
+        }
+        
+        /* 6. Mobile Menu Styles (Full Screen Overlay) */
+        #mobile-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0f172a; /* dark-bg */
+            z-index: 1000;
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(100%); /* Start off-screen */
+        }
+        #mobile-menu.open {
+            transform: translateX(0);
+        }
+        
+        /* 7. CTA Button Enhancement & Hover Animation */
+        .cta-button {
+            transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
+        }
+        .cta-button:hover {
+            transform: scale(1.05); /* Increased scale for more attractive pop */
+            box-shadow: 0 6px 25px rgba(249, 115, 22, 0.7);
+        }
+
+        /* 8. TYPOGRAPHY FIX: Highlight Emphasis Styling (New Neon Gold) */
+        .highlight-emphasis {
+            font-style: italic;
+            font-weight: 700;
+            color: #fcd34d; /* Neon Yellow/Gold */
+            text-shadow: 0 0 8px rgba(252, 211, 77, 0.9), 0 0 2px rgba(252, 211, 77, 0.5); 
+        }
+        
+        /* Hero background effect for visual depth */
+        #hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 10%, rgba(79, 70, 229, 0.2) 0%, transparent 40%);
+            opacity: 0.3;
+            z-index: -1;
+        }
+        
+    </style>
+</head>
+<body class="antialiased">
+    
+    <!-- JavaScript for Mobile Menu Toggle and Scroll Animation -->
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('open');
+            document.body.classList.toggle('overflow-hidden'); // Prevent scrolling behind modal
+        }
+        
+        /**
+         * Replaces ***text*** with the styled span.
+         */
+        function applyEmphasisStyling() {
+            // Must run on a limited scope to avoid breaking existing event listeners after applying it to innerHTML
+            const sections = document.querySelectorAll('main p, main h2, main h3, main a');
+            sections.forEach(section => {
+                if (section.innerHTML) {
+                    // Use a temporary variable to hold the processed content before updating the innerHTML
+                    let content = section.innerHTML;
+                    
+                    // Regex replacement: ***(text)*** -> <span class="highlight-emphasis">text</span>
+                    const newContent = content.replace(/\*\*\*(.*?)\*\*\*/g, '<span class="highlight-emphasis">$1</span>');
+                    
+                    // Only update if a change was made
+                    if (newContent !== content) {
+                         section.innerHTML = newContent;
+                    }
+                }
+            });
+        }
+        
+        /**
+         * Observes feature cards and animates them into view on scroll.
+         */
+        function setupScrollAnimation() {
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.15 // Trigger when 15% of the element is visible
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target); // Stop observing once visible
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.feature-card').forEach(card => {
+                observer.observe(card);
+            });
+        }
+        
+        // Initialize UI and animations after the DOM is fully loaded
+        window.onload = function() {
+            applyEmphasisStyling();
+            setupScrollAnimation();
+        };
+
+    </script>
+    
+    <!-- 1. Mobile Menu Overlay (Hidden on MD and up) -->
+    <div id="mobile-menu" class="md:hidden p-6">
+        <div class="flex justify-between items-center mb-10">
+            <h2 class="text-3xl font-extrabold text-text-light">Menu</h2>
+            <button onclick="toggleMobileMenu()" class="text-text-light p-2 rounded-md hover:bg-dark-card">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        
+        <nav class="flex flex-col space-y-6 text-xl font-semibold">
+            <a href="#how-it-works" onclick="toggleMobileMenu()" class="py-3 border-b border-slate-700 hover:text-secondary transition duration-200">How It Works</a>
+            <a href="#features" onclick="toggleMobileMenu()" class="py-3 border-b border-slate-700 hover:text-secondary transition duration-200">Features</a>
+            <a href="#benefits" onclick="toggleMobileMenu()" class="py-3 border-b border-slate-700 hover:text-secondary transition duration-200">Benefits</a>
+            <a href="#contact" onclick="toggleMobileMenu()" class="py-3 border-b border-slate-700 hover:text-secondary transition duration-200">Access</a>
+            
+            <a href="https://cutt.ly/ZtriYIPW" target="_blank" onclick="toggleMobileMenu()" class="cta-button bg-secondary text-white font-bold text-lg mt-8 py-3 px-8 rounded-xl text-center">
+                Get FREE Early Access
+            </a>
+        </nav>
+    </div>
+
+    <!-- Navigation Bar -->
+    <header class="sticky top-0 z-50 bg-dark-bg/95 backdrop-blur-sm shadow-lg border-b border-slate-700">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            
+            <!-- Logo/App Name: FIXED for two-line logotype -->
+            <a href="#hero" class="space-x-2 logo-container">
+                <span class="text-secondary text-2xl sm:text-3xl mr-1">⚔️</span>
+                <span class="brand-name-wrapper">
+                    <!-- Primary Name -->
+                    <span class="block font-extrabold text-primary logo-text-primary">Sentinel</span>
+                    <!-- Secondary Tagline (Smaller, Muted, Italic) -->
+                    <span class="block font-semibold text-secondary logo-text-secondary">Master the Impulse</span>
+                </span>
+            </a>
+            
+            <!-- Navigation Links (Hidden on mobile, visible on MD and up) -->
+            <div class="hidden md:flex space-x-6 lg:space-x-8 text-sm font-medium">
+                <a href="#how-it-works" class="hover:text-secondary transition duration-200">How It Works</a>
+                <a href="#features" class="hover:text-secondary transition duration-200">Features</a>
+                <a href="#benefits" class="hover:text-secondary transition duration-200">Benefits</a>
+                <a href="#contact" class="hover:text-secondary transition duration-200">Access</a>
+            </div>
+            
+            <!-- CTA Button (Hidden on mobile, visible on MD and up) -->
+            <a href="https://cutt.ly/ZtriYIPW" target="_blank" class="cta-button bg-secondary text-white font-semibold py-2 px-4 rounded-lg text-sm hidden md:inline-block">
+                Get FREE Access
+            </a>
+            
+            <!-- Mobile Menu Button (Visible on mobile, hidden on MD and up) -->
+            <button onclick="toggleMobileMenu()" class="md:hidden text-text-light p-2 rounded-md hover:bg-dark-card transition duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+    </header>
+
+    <main class="relative z-10">
+        <!-- 1. Hero Section -->
+        <section id="hero" class="relative pt-20 pb-24 lg:pt-32 lg:pb-40 text-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-4xl mx-auto">
+                <h1 class="section-title text-4xl sm:text-6xl lg:text-7xl mb-6">
+                    <span class="block">Stop Reacting.</span> 
+                    <span class="hero-gradient block font-extrabold">Start Mastering Self-Control.</span>
+                </h1>
+                <p class="text-xl sm:text-2xl text-slate-300 mb-8 max-w-3xl mx-auto">
+                    Sentinel is a ***Gamified Habit Tracker*** that converts urges into strategic challenges. Build lasting willpower and reclaim your focus through actionable daily quests.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6">
+                    <!-- Updated main CTA text and link -->
+                    <a href="https://cutt.ly/ZtriYIPW" target="_blank" class="bg-primary cta-button hover:bg-primary/90 text-white font-bold text-lg py-3 px-8 rounded-xl shadow-lg transition duration-300">
+                        Get FREE Early Access
+                    </a>
+                    <a href="#features" class="bg-dark-card hover:bg-slate-700 border border-slate-600 text-text-light font-bold text-lg py-3 px-8 rounded-xl shadow-lg transition duration-300 transform hover:scale-105">
+                        Explore Features
+                    </a>
+                </div>
+                <!-- New urgent early access banner/text -->
+                <p class="mt-8 text-lg font-semibold text-secondary/80 animate-pulse">
+                    🚨 We are currently seeking 100 users for MVP feedback! Spaces limited.
+                </p>
+            </div>
+        </section>
+        
+        <!-- 2. The Problem/The Battlefield Section -->
+        <section id="problem" class="py-16 lg:py-24 bg-dark-card text-center shadow-inner border-y border-slate-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="section-title text-3xl mb-4">The Challenge: Impulse vs. Intent</h2>
+                <p class="text-lg text-slate-400 max-w-3xl mx-auto mb-12">
+                    Every craving or procrastination attempt is a direct attack on your long-term goals. We give you the clear strategy and tools to fight back.
+                </p>
+                
+                <div class="grid md:grid-cols-3 gap-8 text-left">
+                    <!-- Problem 1: Isolation -->
+                    <div class="p-6 bg-dark-bg rounded-xl shadow-2xl border-t-4 border-danger feature-card" style="transition-delay: 0s;">
+                        <span class="text-5xl block mb-3">👤</span>
+                        <h3 class="text-xl font-bold text-danger mb-2">The Loneliness of the Fight</h3>
+                        <p class="text-slate-300 text-sm">Bad habits thrive in isolation. Sentinel breaks the cycle of shame by providing a structured logging system and a clear path to action.</p>
+                    </div>
+                    <!-- Problem 2: Lack of Clarity/Data -->
+                    <div class="p-6 bg-dark-bg rounded-xl shadow-2xl border-t-4 border-secondary feature-card" style="transition-delay: 0.1s;">
+                        <span class="text-5xl block mb-3">🌀</span>
+                        <h3 class="text-xl font-bold text-secondary mb-2">The Habit Loop Breakdown</h3>
+                        <p class="text-slate-300 text-sm">Most trackers rely on tracking failure. ***Sentinel tracks triggers, resistance applied, and victories***, providing actionable data to stop the cycle before it starts. 
+</p>
+                    </div>
+                    <!-- Problem 3: Motivation Drop -->
+                    <div class="p-6 bg-dark-bg rounded-xl shadow-2xl border-t-4 border-primary feature-card" style="transition-delay: 0.2s;">
+                        <span class="text-5xl block mb-3">🔋</span>
+                        <h3 class="text-xl font-bold text-primary mb-2">Motivation Fatigue</h3>
+                        <p class="text-slate-300 text-sm">Willpower is finite. We turn the hard work of recovery into a highly rewarding, progression-based game with levels, XP, and permanent stat gains.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. How It Works (The Gamified Solution) Section -->
+        <section id="how-it-works" class="py-16 lg:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="section-title text-primary mb-12">The Sentinel Protocol: How Transformation Works</h2>
+            
+            <div class="grid md:grid-cols-4 gap-8">
+                
+                <!-- Step 1: Log Impulse -->
+                <div class="p-6 bg-dark-card rounded-xl border border-primary/30 feature-card" style="transition-delay: 0s;">
+                    <span class="text-6xl block mb-4">📝</span>
+                    <h3 class="text-2xl font-bold mb-2">1. Log the Urge</h3>
+                    <p class="text-slate-300 text-sm">When an urge hits, you log the trigger. This creates a focused ***Challenge in the Battle Arena***, defining your required effort.</p>
+                </div>
+                
+                <!-- Step 2: Quests -->
+                <div class="p-6 bg-dark-card rounded-xl border border-secondary/30 feature-card" style="transition-delay: 0.1s;">
+                    <span class="text-6xl block mb-4">🛡️</span>
+                    <h3 class="text-2xl font-bold mb-2">2. Earn Power with Quests</h3>
+                    <p class="text-slate-300 text-sm">Complete strategic Quests (like exercise or meditation) to gain **Power**—the crucial resource needed to overcome your Challenge.</p>
+                </div>
+                
+                <!-- Step 3: Battle Arena -->
+                <div class="p-6 bg-dark-card rounded-xl border border-accent/30 feature-card" style="transition-delay: 0.2s;">
+                    <span class="text-6xl block mb-4">⚔️</span>
+                    <h3 class="text-2xl font-bold mb-2">3. Engage the Battle</h3>
+                    <p class="text-slate-300 text-sm">Use your ***Willpower to attack*** and your Focus to defend against mental fatigue. Win to secure your discipline and advance your journey.</p>
+                </div>
+
+                <!-- Step 4: Level Up -->
+                <div class="p-6 bg-dark-card rounded-xl border border-primary/30 feature-card" style="transition-delay: 0.3s;">
+                    <span class="text-6xl block mb-4">🌟</span>
+                    <h3 class="text-2xl font-bold mb-2">4. Upgrade Your Mind</h3>
+                    <p class="text-slate-300 text-sm">Win the battle, gain **XP**, and earn ***permanent stat increases*** and powerful Upgrades that fortify your psychological defenses.</p>
+                </div>
+            </div>
+            
+             <!-- Updated CTA link -->
+             <a href="https://cutt.ly/ZtriYIPW" target="_blank" class="inline-block mt-12 bg-secondary cta-button hover:bg-secondary/90 text-white font-bold text-lg py-3 px-8 rounded-xl shadow-xl transition duration-300 transform hover:scale-105">
+                Start Your First Encounter Today
+            </a>
+        </section>
+        
+        <!-- 4. Core Features Section -->
+        <section id="features" class="py-16 lg:py-24 bg-dark-bg text-center">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="section-title text-secondary mb-12">Core Sentinel Features</h2>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
+                    
+                    <!-- Feature 1: Dynamic Habit Challenge (Generalization & Simplicity) -->
+                    <div class="p-6 bg-dark-card rounded-xl border-l-4 border-danger feature-card" style="transition-delay: 0s;">
+                        <h3 class="text-xl font-bold mb-2 text-text-light flex items-center space-x-2">
+                            <span>🧠 Dynamic Challenge Scaling</span>
+                        </h3>
+                        <p class="text-slate-400">Challenges dynamically scale difficulty based on your past habits and mental strength, ensuring optimal effort and continuous, rewarding growth. (A strategic approach to self-improvement).</p>
+                    </div>
+
+                    <!-- Feature 2: Action-Based Quests (Generalization) -->
+                    <div class="p-6 bg-dark-card rounded-xl border-l-4 border-accent feature-card" style="transition-delay: 0.1s;">
+                        <h3 class="text-xl font-bold mb-2 text-text-light flex items-center space-x-2">
+                            <span>✅ Action-Based Daily Quests</span>
+                        </h3>
+                        <p class="text-slate-400">The system requires ***real-world action***—like focused work, movement, or mindfulness—to generate energy. This builds positive routines and prevents mental avoidance.</p>
+                    </div>
+                    
+                    <!-- Feature 3: Lasting Willpower Upgrades (Generalization & Simplicity) -->
+                    <div class="p-6 bg-dark-card rounded-xl border-l-4 border-primary feature-card" style="transition-delay: 0.2s;">
+                        <h3 class="text-xl font-bold mb-2 text-text-light flex items-center space-x-2">
+                            <span>✨ Permanent Mental Fortification</span>
+                        </h3>
+                        <p class="text-slate-400">Invest earned XP into permanent resistance upgrades that bolster your core mental stats, increasing your long-term resilience and making future temptations easier to ignore.</p>
+                    </div>
+                    
+                    <!-- Feature 4: Cumulative Effort Tracking (Generalization & Simplicity) -->
+                    <div class="p-6 bg-dark-card rounded-xl border-l-4 border-secondary feature-card" style="transition-delay: 0.3s;">
+                        <h3 class="text-xl font-bold mb-2 text-text-light flex items-center space-x-2">
+                            <span>📈 Cumulative Progress Tracking</span>
+                        </h3>
+                        <p class="text-slate-400">All efforts are recorded. If you experience a setback, your previous progress remains, emphasizing that ***every moment of discipline is cumulative***, not lost.</p>
+                    </div>
+                    
+                    <!-- Feature 5: Detailed Log History -->
+                    <div class="p-6 bg-dark-card rounded-xl border-l-4 border-accent feature-card" style="transition-delay: 0.4s;">
+                        <h3 class="text-xl font-bold mb-2 text-text-light flex items-center space-x-2">
+                            <span>📊 Clear Trigger Analytics</span>
+                        </h3>
+                        <p class="text-slate-400">Quickly track your most frequent emotional and environmental triggers. Visualize your performance to pinpoint effective strategies for long-term control.</p>
+                    </div>
+                    
+                    <!-- Feature 6: Real-World Accountability -->
+                    <div class="p-6 bg-dark-card rounded-xl border-l-4 border-primary feature-card" style="transition-delay: 0.5s;">
+                        <h3 class="text-xl font-bold mb-2 text-text-light flex items-center space-x-2">
+                            <span>🤝 Integrated Support Network</span>
+                        </h3>
+                        <p class="text-slate-400">The platform provides quick access to ***external support resources***, breaking the isolation loop that fuels impulsive behavior and prioritizing your immediate well-being.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Benefits & Testimonials (Simple) Section -->
+        <section id="benefits" class="py-16 lg:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="section-title text-secondary mb-12">The Impact: What You'll Achieve</h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="p-6 bg-dark-card rounded-xl shadow-xl feature-card border-b-4 border-secondary" style="transition-delay: 0s;">
+                    <span class="text-4xl block mb-2">🎯</span>
+                    <h3 class="text-xl font-bold mb-2">Laser Focus</h3>
+                    <p class="text-slate-300 text-sm">Reclaim hours lost to mindless distraction. Your enhanced Focus translates directly into ***significantly higher productivity***.</p>
+                </div>
+                <div class="p-6 bg-dark-card rounded-xl shadow-xl feature-card border-b-4 border-secondary" style="transition-delay: 0.1s;">
+                    <span class="text-4xl block mb-2">💪</span>
+                    <h3 class="text-xl font-bold mb-2">True Self-Mastery</h3>
+                    <p class="text-slate-300 text-sm">Every victory hardens your core Willpower, building genuine, lasting self-control that makes resistance feel effortless, not draining.</p>
+                </div>
+                <div class="p-6 bg-dark-card rounded-xl shadow-xl feature-card border-b-4 border-secondary" style="transition-delay: 0.2s;">
+                    <span class="text-4xl block mb-2">🏆</span>
+                    <h3 class="text-xl font-bold mb-2">Permanent Shift</h3>
+                    <p class="text-slate-300 text-sm">By turning recovery into a predictable, fun system, you move beyond temporary fixes to ***permanent behavioral mastery***.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Call to Action / Contact Section (UPDATED FOR MVP TESTING) -->
+        <section id="contact" class="py-16 lg:py-24 bg-primary text-white text-center">
+            <div class="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Updated Heading and Message -->
+                <h2 class="text-3xl font-extrabold mb-4">Sentinel MVP: Seeking 100 Early Warriors</h2>
+                <p class="text-xl mb-8 opacity-90">We are actively seeking our first ***100 users*** to test the live MVP and provide critical feedback to refine the battle system. Your input will shape the future of habit mastery. Join the roster now!</p>
+                
+                <div class="space-y-4">
+                    <!-- Updated CTA Button with live link -->
+                    <a href="https://cutt.ly/ZtriYIPW" target="_blank" class="block w-full bg-secondary cta-button hover:bg-secondary/90 text-white font-bold text-xl py-4 px-8 rounded-xl shadow-2xl transition duration-300">
+                        Get FREE Early Access
+                    </a>
+                    
+                    <p class="text-sm opacity-80 pt-4">Need personalized support or partnership inquiries?</p>
+                    <div class="flex justify-center space-x-6">
+                         <!-- Call Link -->
+                        <a href="tel:+918652239152" class="flex items-center space-x-2 text-white hover:text-neon-glow transition duration-200">
+                            <span class="text-2xl">📞</span>
+                            <span class="font-bold text-sm">+918652239152</span>
+                        </a>
+                        
+                        <!-- WhatsApp Link -->
+                        <a href="https://wa.me/918652239152" target="_blank" class="flex items-center space-x-2 text-white hover:text-neon-glow transition duration-200">
+                            <span class="text-2xl">💬</span>
+                            <span class="font-bold text-sm">WhatsApp Support</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark-bg/80 border-t border-slate-800 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-slate-400">
+            <p>&copy; 2025 Sentinel: Master the Impulse. All rights reserved.</p>
+            <div class="mt-2 space-x-4">
+                <a href="#" class="hover:text-text-light transition duration-200">Privacy Policy</a>
+                <a href="#" class="hover:text-text-light transition duration-200">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
